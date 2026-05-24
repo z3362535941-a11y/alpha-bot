@@ -45350,3 +45350,12 @@
 2026-05-24 04:08:45,180 [MemeBot] INFO [37mMemeBot initialized | capital=$2,000[0m
 2026-05-24 04:08:55,635 [MainBot] INFO [37mMainstreamBot initialized | capital=$5,000[0m
 2026-05-24 04:09:01,023 [AlphaBot] INFO [37mAlphaBot initialized | capital=$3,000[0m
+2026-05-24 04:26:06,925 [MemeBot] INFO [37mMemeBot initialized | capital=$2,000[0m
+2026-05-24 04:26:06,925 [MainBot] INFO [37mMainstreamBot initialized | capital=$5,000[0m
+2026-05-24 04:26:06,926 [AlphaBot] INFO [37mAlphaBot initialized | capital=$3,000[0m
+2026-05-24 04:26:06,926 [MemeBot] INFO [37mMemeBot backtest | 5 symbols | 720 bars[0m
+2026-05-24 04:26:14,569 [MemeBot] WARNING [33mDrawdown limit hit — pausing new entries[0m
+2026-05-24 04:26:14,642 [MainBot] INFO [37mMainstreamBot backtest | 5 symbols | 720 bars[0m
+2026-05-24 04:26:16,079 [MainBot] WARNING [33mDrawdown limit hit — pausing new entries[0m
+2026-05-24 04:26:16,208 [AlphaBot] INFO [37mAlphaBot backtest | 5 symbols | 720 bars[0m
+2026-05-24 04:26:21,748 [AlphaBot] WARNING [33mDrawdown limit hit — pausing new entries[0m
