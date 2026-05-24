@@ -1,0 +1,702 @@
+[
+  {
+    "timestamp": "2026-05-24T03:55:56.363029",
+    "bot": "MemeBot",
+    "action": "BUY",
+    "symbol": "SHIB",
+    "price": 0.11389256138688851,
+    "qty": 3512.081870221672,
+    "pnl": 0.0,
+    "reason": "macd_cross_up+rsi_ok+momentum"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:56.410846",
+    "bot": "MemeBot",
+    "action": "SELL",
+    "symbol": "SHIB",
+    "price": 0.1042854487745128,
+    "qty": 3512.081870221672,
+    "pnl": -33.74096603110269,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:57.062380",
+    "bot": "MemeBot",
+    "action": "BUY",
+    "symbol": "BONK",
+    "price": 1.6382017496153323,
+    "qty": 235.93163276642463,
+    "pnl": 0.0,
+    "reason": "vol_spike+macd_cross_up+rsi_ok+momentum"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:57.156998",
+    "bot": "MemeBot",
+    "action": "SELL",
+    "symbol": "BONK",
+    "price": 1.5747183913049283,
+    "qty": 235.93163276642463,
+    "pnl": -14.97773237966958,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:58.529389",
+    "bot": "MemeBot",
+    "action": "BUY",
+    "symbol": "BONK",
+    "price": 1.4217903061118804,
+    "qty": 267.6291426379641,
+    "pnl": 0.0,
+    "reason": "macd_cross_up+rsi_ok+momentum"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:58.559936",
+    "bot": "MemeBot",
+    "action": "SELL",
+    "symbol": "BONK",
+    "price": 1.3176335609152616,
+    "qty": 267.6291426379641,
+    "pnl": -27.875380416931968,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:58.677094",
+    "bot": "MemeBot",
+    "action": "BUY",
+    "symbol": "DOGE",
+    "price": 0.20695055991480388,
+    "qty": 1784.7855479152854,
+    "pnl": 0.0,
+    "reason": "macd_cross_up+rsi_ok+momentum"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:58.707736",
+    "bot": "MemeBot",
+    "action": "SELL",
+    "symbol": "DOGE",
+    "price": 0.18972759240198658,
+    "qty": 1784.7855479152854,
+    "pnl": -30.739303509090774,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.122496",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BTC",
+    "price": 32735.767395657593,
+    "qty": 0.030547626634610383,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.242604",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "ETH",
+    "price": 1195.927349599493,
+    "qty": 0.668936955299094,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.244263",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BTC",
+    "price": 29678.116535843375,
+    "qty": 0.030547626634610383,
+    "pnl": -93.40397684460012,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.261542",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "XRP",
+    "price": 29793.930436285318,
+    "qty": 0.02693966178710835,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.264140",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "ETH",
+    "price": 1178.1535544650853,
+    "qty": 0.668936955299094,
+    "pnl": -11.889548401320534,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.288287",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "ETH",
+    "price": 1183.065247181605,
+    "qty": 0.6739737389368203,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.292546",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "XRP",
+    "price": 34245.41468902601,
+    "qty": 0.02693966178710835,
+    "pnl": 119.92148021947297,
+    "reason": "TAKE_PROFIT"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.626363",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BTC",
+    "price": 32148.250114324077,
+    "qty": 0.0263274112080665,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.634171",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BTC",
+    "price": 31552.80707906751,
+    "qty": 0.0263274112080665,
+    "pnl": -15.676473640178923,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.640405",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BNB",
+    "price": 14154.252553554557,
+    "qty": 0.0593538661080717,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.642564",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "ETH",
+    "price": 1326.0986409261486,
+    "qty": 0.6739737389368203,
+    "pnl": 96.40075117483251,
+    "reason": "TAKE_PROFIT"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.660566",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BTC",
+    "price": 31930.890037338882,
+    "qty": 0.02725006944062922,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.677369",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BTC",
+    "price": 30937.02573094313,
+    "qty": 0.02725006944062922,
+    "pnl": -27.082871363847072,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.689876",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "SOL",
+    "price": 40121.40208746821,
+    "qty": 0.021417143408889908,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.696115",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BNB",
+    "price": 12448.194158503384,
+    "qty": 0.0593538661080717,
+    "pnl": -101.26116155241905,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.714273",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "ETH",
+    "price": 1537.0737083172355,
+    "qty": 0.5301932568180856,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.716652",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "SOL",
+    "price": 39149.264750475246,
+    "qty": 0.021417143408889908,
+    "pnl": -20.820404759514652,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.990004",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BTC",
+    "price": 31698.497255182396,
+    "qty": 0.025726326654908295,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:55:59.991294",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "ETH",
+    "price": 1491.4330375093546,
+    "qty": 0.5301932568180856,
+    "pnl": -24.198375898992527,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.035281",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BTC",
+    "price": 30342.117989124912,
+    "qty": 0.025726326654908295,
+    "pnl": -34.89465606653959,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.197208",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "ETH",
+    "price": 1511.1081732860805,
+    "qty": 0.6318792539321331,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.371947",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BTC",
+    "price": 31352.31404132779,
+    "qty": 0.024364081168314785,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.374853",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BTC",
+    "price": 30208.354679546974,
+    "qty": 0.024364081168314785,
+    "pnl": -27.8715187436814,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.387063",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "SOL",
+    "price": 45189.94087744813,
+    "qty": 0.016656842253041673,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.390664",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "SOL",
+    "price": 41267.63404059558,
+    "qty": 0.016656842253041673,
+    "pnl": -65.33324624947977,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.418524",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "ETH",
+    "price": 1698.1118406492274,
+    "qty": 0.6318792539321331,
+    "pnl": 118.16373781599802,
+    "reason": "TAKE_PROFIT"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.566157",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "SOL",
+    "price": 43827.026080058444,
+    "qty": 0.022014304427443027,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.689837",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "ETH",
+    "price": 1685.9346478775215,
+    "qty": 0.4578215391637094,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.700306",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "ETH",
+    "price": 1889.7359213104228,
+    "qty": 0.4578215391637094,
+    "pnl": 93.30461268657488,
+    "reason": "TAKE_PROFIT"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.719912",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BTC",
+    "price": 34442.928732101216,
+    "qty": 0.023493328537453284,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.720658",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "SOL",
+    "price": 44594.14609132981,
+    "qty": 0.022014304427443027,
+    "pnl": 16.887613460511314,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.869925",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "SOL",
+    "price": 45076.32528480097,
+    "qty": 0.01879173981649462,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.871505",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BTC",
+    "price": 39668.00315385407,
+    "qty": 0.023493328537453284,
+    "pnl": 122.75439002288357,
+    "reason": "TAKE_PROFIT"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.944357",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "XRP",
+    "price": 31317.668320679546,
+    "qty": 0.028373364719173556,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.945226",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "SOL",
+    "price": 41985.194888966405,
+    "qty": 0.01879173981649462,
+    "pnl": -58.08771813738121,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.958470",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "ETH",
+    "price": 1762.5049907049581,
+    "qty": 0.48626672430741896,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:00.960288",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "ETH",
+    "price": 1656.7266627942379,
+    "qty": 0.48626672430741896,
+    "pnl": -51.43648101586196,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.210641",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BNB",
+    "price": 15831.766555105187,
+    "qty": 0.052835097908230585,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.214374",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "XRP",
+    "price": 30055.641296385707,
+    "qty": 0.028373364719173556,
+    "pnl": -35.80795304574239,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.298987",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BTC",
+    "price": 40903.4320706364,
+    "qty": 0.020354592524819526,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.306843",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BTC",
+    "price": 46573.28444984729,
+    "qty": 0.020354592524819526,
+    "pnl": 115.40753485471619,
+    "reason": "TAKE_PROFIT"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.313062",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "ETH",
+    "price": 1645.231691813121,
+    "qty": 0.534110612492468,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.313653",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BNB",
+    "price": 17867.57681298225,
+    "qty": 0.052835097908230585,
+    "pnl": 107.56223429751479,
+    "reason": "TAKE_PROFIT"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.675805",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BNB",
+    "price": 17071.219665660534,
+    "qty": 0.05349987078199631,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_oversold"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.676424",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BNB",
+    "price": 16205.197387991706,
+    "qty": 0.05349987078199631,
+    "pnl": -46.33207994961242,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.695964",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BTC",
+    "price": 45686.07054602687,
+    "qty": 0.019585295989126884,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.696628",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "ETH",
+    "price": 1678.7541959932971,
+    "qty": 0.534110612492468,
+    "pnl": 17.90472523995521,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.797755",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "ETH",
+    "price": 1668.882627247506,
+    "qty": 0.5385215162067921,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.799132",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BTC",
+    "price": 43858.026195319595,
+    "qty": 0.019585295989126884,
+    "pnl": -35.802789689853306,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.823466",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BTC",
+    "price": 44276.642193551525,
+    "qty": 0.01995673667717206,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_oversold+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.824126",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "ETH",
+    "price": 1622.0845661682324,
+    "qty": 0.5385215162067921,
+    "pnl": -25.201762807948466,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.836543",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "SOL",
+    "price": 58636.04357331691,
+    "qty": 0.01494914924989703,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.846345",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BTC",
+    "price": 44629.29360987187,
+    "qty": 0.01995673667717206,
+    "pnl": 7.037771454336932,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.895726",
+    "bot": "MainBot",
+    "action": "BUY",
+    "symbol": "BTC",
+    "price": 45327.590125861425,
+    "qty": 0.01943155895599236,
+    "pnl": 0.0,
+    "reason": "uptrend+pullback_entry+rsi_ok+obv_confirm+macd_recovering"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.898245",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "SOL",
+    "price": 61106.383542063784,
+    "qty": 0.01494914924989703,
+    "pnl": 36.92948089078303,
+    "reason": "end_of_simulation"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:01.898410",
+    "bot": "MainBot",
+    "action": "SELL",
+    "symbol": "BTC",
+    "price": 45808.14446673898,
+    "qty": 0.01943155895599236,
+    "pnl": 9.337920006320273,
+    "reason": "end_of_simulation"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:02.091611",
+    "bot": "AlphaBot",
+    "action": "BUY",
+    "symbol": "SUI",
+    "price": 4.878146409868564,
+    "qty": 122.99753832443218,
+    "pnl": 0.0,
+    "reason": "breakout+ema_expand_up+vol_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:02.411505",
+    "bot": "AlphaBot",
+    "action": "BUY",
+    "symbol": "INJ",
+    "price": 34.082533477303,
+    "qty": 14.083460090185264,
+    "pnl": 0.0,
+    "reason": "breakout+ema_expand_up+macd_bull+vol_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:02.426040",
+    "bot": "AlphaBot",
+    "action": "SELL",
+    "symbol": "SUI",
+    "price": 5.601660415040945,
+    "qty": 122.99753832443218,
+    "pnl": 88.9904415794533,
+    "reason": "TAKE_PROFIT"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:02.522584",
+    "bot": "AlphaBot",
+    "action": "SELL",
+    "symbol": "INJ",
+    "price": 32.77714011475313,
+    "qty": 14.083460090185264,
+    "pnl": -18.384455323463857,
+    "reason": "STOP_LOSS"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:02.609978",
+    "bot": "AlphaBot",
+    "action": "BUY",
+    "symbol": "ARB",
+    "price": 8.826231378239367,
+    "qty": 71.17900807034087,
+    "pnl": 0.0,
+    "reason": "breakout+ema_expand_up+macd_bull+vol_confirm"
+  },
+  {
+    "timestamp": "2026-05-24T03:56:02.768080",
+    "bot": "AlphaBot",
+    "action": "SELL",
+    "symbol": "ARB",
+    "price": 6.8198324690356085,
+    "qty": 71.17900807034087,
+    "pnl": -142.81348415053745,
+    "reason": "STOP_LOSS"
+  }
+]

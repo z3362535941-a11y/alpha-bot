@@ -1,0 +1,52 @@
+[
+  {
+    "seed": 42,
+    "total_start": 10000.0,
+    "total_end": 9324.119999999999,
+    "total_pnl": -675.880000000001,
+    "total_return_pct": -6.758800000000011,
+    "total_trades": 27,
+    "win_rate": 22.22222222222222,
+    "max_dd": 26.17
+  },
+  {
+    "seed": 137,
+    "total_start": 10000.0,
+    "total_end": 9268.55,
+    "total_pnl": -731.4500000000007,
+    "total_return_pct": -7.314500000000007,
+    "total_trades": 19,
+    "win_rate": 15.789473684210526,
+    "max_dd": 26.17
+  },
+  {
+    "seed": 256,
+    "total_start": 10000.0,
+    "total_end": 9498.61,
+    "total_pnl": -501.3899999999994,
+    "total_return_pct": -5.013899999999994,
+    "total_trades": 28,
+    "win_rate": 25.0,
+    "max_dd": 26.17
+  },
+  {
+    "seed": 512,
+    "total_start": 10000.0,
+    "total_end": 9314.82,
+    "total_pnl": -685.1800000000003,
+    "total_return_pct": -6.8518000000000026,
+    "total_trades": 27,
+    "win_rate": 22.22222222222222,
+    "max_dd": 26.17
+  },
+  {
+    "seed": 999,
+    "total_start": 10000.0,
+    "total_end": 9271.21,
+    "total_pnl": -728.7900000000009,
+    "total_return_pct": -7.2879000000000085,
+    "total_trades": 19,
+    "win_rate": 15.789473684210526,
+    "max_dd": 26.17
+  }
+]
