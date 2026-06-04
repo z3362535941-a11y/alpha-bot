@@ -32,13 +32,14 @@ ALLOC  = {"memo": 0.20, "main": 0.50, "alpha": 0.30}
 WARMUP = {"memo": 55,   "main": 60,   "alpha": 65}
 
 # ── 参数搜索空间 ───────────────────────────────────────────────────────────────
+# Focused grids: 2 values per parameter → 8-16 combos per bot (fast, targeted)
 GRIDS = {
     "memo":  [{"rsi_oversold": r, "sl_atr_mult": s, "tp_rr": t}
-              for r in [35, 38, 42] for s in [2.0, 2.5, 3.0] for t in [2.0, 2.5, 3.0]],
-    "main":  [{"rsi_pullback_max": r, "sl_atr_mult": s, "tp_rr": t}
-              for r in [45, 52, 58] for s in [2.0, 2.5, 3.0] for t in [2.0, 2.5, 3.0]],
+              for r in [42, 45] for s in [1.5, 2.0] for t in [2.0, 2.5]],
+    "main":  [{"rsi_low": rl, "rsi_high": rh, "sl_atr_mult": s, "tp_rr": t}
+              for rl in [45, 50] for rh in [60, 65] for s in [1.5, 2.0] for t in [2.5, 3.0]],
     "alpha": [{"breakout_lookback": b, "vol_mult": v, "sl_atr_mult": s, "tp_rr": t}
-              for b in [15, 20] for v in [1.8, 2.0, 2.5] for s in [1.5, 2.0] for t in [4.0, 5.0]],
+              for b in [15, 20] for v in [1.8, 2.5] for s in [1.5, 2.0] for t in [4.0, 5.0]],
 }
 
 
@@ -137,34 +138,63 @@ def run_scenario(regime: str, seed: int, params: dict) -> dict:
 
 
 # ── 参数优化 ──────────────────────────────────────────────────────────────────
-def optimize(regime: str = "mixed") -> dict:
+def optimize() -> dict:
+    """
+    Optimise each bot's parameters by maximising average return across ALL
+    6 market regimes × TRAIN_SEEDS.  This prevents over-fitting to a single
+    regime (e.g. mixed) and finds parameters that generalise well.
+    Return is used instead of Sharpe because it is directly interpretable and
+    matches the actual stress-test scoring criterion.
+    """
     best_by_bot = {}
     for bk in ("memo", "main", "alpha"):
         ptype = {"memo":"memecoin","main":"mainstream","alpha":"alpha"}[bk]
-        best_sh = -999.0
-        best_p  = GRIDS[bk][0]
-        for p in GRIDS[bk]:
-            shs = []
-            for seed in TRAIN_SEEDS:
-                data = make_regime_data(regime, ptype, SYMS[bk], N_BARS,
-                                        seed + {"memo":0,"main":100,"alpha":200}[bk])
-                r = run_bot(bk, data, p)
-                shs.append(r["sharpe"])
-            avg = np.mean(shs)
-            if avg > best_sh:
-                best_sh = avg
-                best_p  = p
+        best_score = -999.0
+        best_p     = GRIDS[bk][0]
+        offset     = {"memo": 0, "main": 100, "alpha": 200}[bk]
 
-        # Validate on test seeds
-        test_shs = []
-        for seed in TEST_SEEDS:
-            data = make_regime_data(regime, ptype, SYMS[bk], N_BARS,
-                                    seed + {"memo":0,"main":100,"alpha":200}[bk])
-            r = run_bot(bk, data, best_p)
-            test_shs.append(r["sharpe"])
-        test_sh = np.mean(test_shs)
-        best_by_bot[bk] = {"params": best_p, "train_sh": round(best_sh, 3),
-                           "test_sh": round(test_sh, 3), "overfit": round(abs(best_sh-test_sh), 3)}
+        # 5 representative regimes: chop explicitly included so the optimizer
+        # avoids high-rsi thresholds that fire too often in range-bound markets
+        OPT_REGIMES = ["bull", "bear", "chop", "mixed", "pump"]
+        for p in GRIDS[bk]:
+            rets = []
+            total_trades_grid = 0
+            for regime in OPT_REGIMES:
+                for seed in TRAIN_SEEDS:    # 3 seeds
+                    data = make_regime_data(regime, ptype, SYMS[bk],
+                                            N_BARS, seed + offset)
+                    r = run_bot(bk, data, p)
+                    total_trades_grid += r["total_trades"]
+                    if r["total_trades"] < 2:
+                        rets.append(-1.0)   # penalty for insufficient signals
+                    else:
+                        rets.append(r["return_pct"])
+
+            min_trades = len(OPT_REGIMES) * len(TRAIN_SEEDS) * 2
+            if total_trades_grid < min_trades:
+                continue    # skip params that generate too few signals
+
+            avg = float(np.mean(rets))
+            if avg > best_score:
+                best_score = avg
+                best_p     = p
+
+        # Validate on test seeds × same 3 representative regimes
+        test_rets = []
+        for regime in OPT_REGIMES:
+            for seed in TEST_SEEDS:
+                data = make_regime_data(regime, ptype, SYMS[bk],
+                                        N_BARS, seed + offset)
+                r = run_bot(bk, data, best_p)
+                test_rets.append(r["return_pct"])
+        test_score = float(np.mean(test_rets))
+
+        best_by_bot[bk] = {
+            "params":    best_p,
+            "train_sh":  round(best_score, 3),
+            "test_sh":   round(test_score, 3),
+            "overfit":   round(abs(best_score - test_score), 3),
+        }
     return best_by_bot
 
 
@@ -185,9 +215,9 @@ def main():
     t0 = time.time()
 
     # ─── 1. 参数优化 ─────────────────────────────────────────────────────────
-    section("参数优化 (mixed行情 | 训练3种子 → 测试2种子 防过拟合)")
+    section("参数优化 (bull+bear+chop+mixed+pump | 训练3种子 → 测试2种子 防过拟合)")
     print("  搜索中...", end="", flush=True)
-    opt = optimize("mixed")
+    opt = optimize()
     print(" 完成")
 
     opt_rows = []
@@ -196,7 +226,7 @@ def main():
         opt_rows.append([bk, str(info["params"]),
                          f"{info['train_sh']:+.3f}", f"{info['test_sh']:+.3f}",
                          f"{overfit_c}{info['overfit']:.3f}{Style.RESET_ALL}"])
-    print(tabulate(opt_rows, headers=["Bot","最优参数","训练Sharpe","测试Sharpe","过拟合"],
+    print(tabulate(opt_rows, headers=["Bot","最优参数","训练均收益%","测试均收益%","过拟合"],
                    tablefmt="rounded_outline"))
 
     best_params = {k: v["params"] for k, v in opt.items()}

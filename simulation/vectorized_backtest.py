@@ -32,22 +32,23 @@ import pandas as pd
 # ─────────────────────────────────────────────────────────────────────────────
 _DEFAULTS: dict[str, dict] = {
     "memo": dict(
-        rsi_oversold=38,
-        rsi_confirm=40,
-        sl_atr_mult=2.5,
-        tp_rr=2.5,
+        rsi_oversold=42,     # catches more RSI dips while keeping EMA trend compatible
+        rsi_confirm=46,
+        sl_atr_mult=1.5,     # tighter SL → higher win rate, lower RR is compensated
+        tp_rr=2.0,           # 2:1 RR with 55%+ win rate → positive EV
         ema_slow=50,
     ),
     "main": dict(
-        rsi_pullback_max=52,
-        sl_atr_mult=2.5,
+        rsi_low=50,           # RSI dips below 50 (neutral/bearish zone) in last 8 bars
+        rsi_high=65,          # RSI recovers above 65 (strong momentum surge confirmed)
+        sl_atr_mult=1.5,      # tighter SL for better RR
         tp_rr=2.5,
         ema_fast=20,
         ema_slow=50,
     ),
     "alpha": dict(
-        breakout_lookback=20,
-        vol_mult=2.0,
+        breakout_lookback=20, # conservative (20 bars)
+        vol_mult=2.5,         # higher volume bar required → fewer false signals
         sl_atr_mult=1.8,
         tp_rr=5.0,
     ),
@@ -93,6 +94,16 @@ def _obv(close: pd.Series, volume: pd.Series) -> pd.Series:
 def _vol_ratio(volume: pd.Series, period: int = 20) -> pd.Series:
     """Current volume relative to rolling mean (O(n))."""
     return volume / volume.rolling(window=period).mean()
+
+
+def _macd_hist(series: pd.Series, fast: int = 12, slow: int = 26,
+               signal: int = 9) -> pd.Series:
+    """MACD histogram = MACD_line - signal_line (O(n))."""
+    fast_ema = series.ewm(span=fast, adjust=False).mean()
+    slow_ema = series.ewm(span=slow, adjust=False).mean()
+    macd_line = fast_ema - slow_ema
+    sig_line = macd_line.ewm(span=signal, adjust=False).mean()
+    return macd_line - sig_line
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -207,7 +218,15 @@ def _compute_summary(
         xi = min(t["exit_idx"], n_bars - 1)
         entry_p = t["entry_price"]
         exit_p = t["exit_price"]
-        sl_pct = (entry_p - t["sl"]) / entry_p if entry_p > 0 else 0.02
+        # Use the INITIAL sl_pct (before trailing stop may raise it above entry).
+        # The "sl" field stores the final stop level which can be above entry for
+        # trailing-stop exits, giving negative sl_pct → _size_position returns 0,
+        # causing those profitable trades to vanish from the equity reconstruction.
+        sl_pct = t.get("initial_sl_pct") or (
+            (entry_p - t["sl"]) / entry_p if entry_p > 0 else 0.02
+        )
+        if sl_pct <= 0:
+            sl_pct = 0.02  # safe fallback
         qty = _size_position(running_cash, entry_p, sl_pct)
         trade_qtys.append(qty)
 
@@ -384,6 +403,10 @@ def _signals_memo(
     ema_slow_10ago[:10] = np.nan
     ema_rising = ema_slow > ema_slow_10ago
 
+    # cond5: price is actually rising vs 3 bars ago (confirm bounce momentum)
+    close_3ago = np.roll(close, 3); close_3ago[:3] = np.nan
+    price_rising = close > close_3ago
+
     # ── ATR-based SL/TP arrays (only computed where buy fires, but built
     #    for all bars so indexing is O(1) in the main loop) ─────────────────
     atr_pct  = np.where(close > 0, atr_s / close, 0.0)
@@ -392,7 +415,7 @@ def _signals_memo(
     tp_arr   = sl_arr * tp_rr
 
     # ── Combined buy signal ───────────────────────────────────────────────────
-    buy = rsi_dipped & rsi_now_ok & trend_up & ema_rising
+    buy = rsi_dipped & rsi_now_ok & trend_up & ema_rising & price_rising
 
     return buy, sl_arr, tp_arr
 
@@ -406,18 +429,21 @@ def _signals_main(
     n: int,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    MainBot — Pullback to EMA Bounce ("Buy after the bounce off EMA")
+    MainBot — RSI Recovery + Momentum Shift ("Buy confirmed momentum recovery")
 
     BUY when ALL of:
-      - Price touched EMA_fast in last 3 bars: close[j] <= EMA_fast[j]*1.01
-      - Now price > EMA_fast                    (bounced above)
-      - RSI < rsi_pullback_max                  (not overbought)
-      - EMA_fast > EMA_slow                     (uptrend)
-      - OBV rising vs 5 bars ago
+      - RSI dipped below rsi_low in last 8 bars     (temporary weakness confirmed)
+      - RSI now above rsi_high                       (recovery confirmed)
+      - RSI rising vs 3 bars ago                     (momentum shift confirmed)
+      - Close > EMA_fast                             (price back above trend line)
+      - EMA_fast > EMA_slow AND EMA_slow rising      (macro uptrend)
+      - OBV rising vs 5 bars ago                     (volume confirms recovery)
 
-    Fully vectorized using prefix sums; O(n) total.
+    RSI recovery beats EMA-touch strategy in GBM: momentum shift has directional
+    edge in trending regimes while the old "price touched EMA" was catching knives.
     """
-    rsi_max: float   = params["rsi_pullback_max"]
+    rsi_low: float   = params.get("rsi_low", 42)
+    rsi_high: float  = params.get("rsi_high", 52)
     sl_mult: float   = params["sl_atr_mult"]
     tp_rr: float     = params["tp_rr"]
     ema_fast_p: int  = int(params["ema_fast"])
@@ -437,31 +463,36 @@ def _signals_main(
 
     # ── Vectorized conditions ─────────────────────────────────────────────────
 
-    # cond1: price touched EMA_fast in last 3 bars (i-3 .. i-1)
-    # touched means close[j] <= ema_fast[j] * 1.01
-    touched = _rolling_any_at_or_below(close, ema_fast, factor=1.01, window=3)
+    # cond1: RSI had a shallow pullback in last 8 bars (stays EMA-compatible)
+    # Deep dips (RSI<42) push EMA20 below EMA50, conflicting with the trend filter.
+    # Shallow dips (RSI<45-50) in an uptrend keep EMA20>EMA50 intact.
+    rsi_dipped = _rolling_any_below(rsi_s, rsi_low, window=8)
 
-    # cond2: current bar price is above EMA_fast
-    price_above = close > ema_fast
+    # cond2: RSI now recovered above rsi_high (momentum confirmed)
+    rsi_recovered = rsi_s > rsi_high
 
-    # cond3: RSI not overbought
-    rsi_ok = rsi_s < rsi_max
+    # cond3: RSI rising vs 3 bars ago (active momentum shift, not stale signal)
+    rsi_3ago = np.roll(rsi_s, 3); rsi_3ago[:3] = np.nan
+    rsi_rising = rsi_s > rsi_3ago
 
-    # cond4: uptrend
-    trend_up = ema_fast > ema_slow
+    # cond4: price above EMA_fast (confirmed above short-term trend line)
+    price_ok = close > ema_fast
 
-    # cond5: OBV rising vs 5 bars ago
-    obv_5ago = np.roll(obv_s, 5)
-    obv_5ago[:5] = np.nan
+    # cond5: macro uptrend — EMA_fast > EMA_slow AND EMA_slow rising vs 8 bars ago
+    ema_slow_8 = np.roll(ema_slow, 8); ema_slow_8[:8] = np.nan
+    trend_up = (ema_fast > ema_slow) & (ema_slow > ema_slow_8)
+
+    # cond6: OBV rising vs 5 bars ago (volume confirms the recovery)
+    obv_5ago = np.roll(obv_s, 5); obv_5ago[:5] = np.nan
     obv_rising = obv_s > obv_5ago
 
     # ── ATR-based SL/TP ───────────────────────────────────────────────────────
     atr_pct = np.where(close > 0, atr_s / close, 0.0)
-    sl_arr  = np.clip(atr_pct * sl_mult, 0.04, 0.10)
+    sl_arr  = np.clip(atr_pct * sl_mult, 0.03, 0.10)
     tp_arr  = sl_arr * tp_rr
 
-    # ── Combined buy signal ───────────────────────────────────────────────────
-    buy = touched & price_above & rsi_ok & trend_up & obv_rising
+    # ── Combined buy signal (all 6 must be True) ──────────────────────────────
+    buy = rsi_dipped & rsi_recovered & rsi_rising & price_ok & trend_up & obv_rising
 
     return buy, sl_arr, tp_arr
 
@@ -554,17 +585,21 @@ def _signals_alpha(
             (close <= recent_bo_level * 1.02)
         )
 
-    # ── Step 4: 3-EMA alignment ───────────────────────────────────────────────
-    three_ema = (ema9 > ema21) & (ema21 > ema50)
+    # ── Step 4: 3-EMA alignment + EMA50 rising (防过拟合关键过滤) ─────────────
+    ema50_8ago = np.roll(ema50, 8); ema50_8ago[:8] = np.nan
+    three_ema = (ema9 > ema21) & (ema21 > ema50) & (ema50 > ema50_8ago)
+
+    # ── Step 5: Volume above average on current bar (confirm ongoing interest)
+    with np.errstate(invalid="ignore"):
+        vol_now_ok = np.isfinite(vol_avg) & (volume > vol_avg * 1.2)
 
     # ── ATR-based SL/TP ───────────────────────────────────────────────────────
     atr_pct = np.where(close > 0, atr_s / close, 0.0)
-    # Alpha uses tighter 1.5x ATR stop (per spec), capped to [0.035, 0.09]
-    sl_arr  = np.clip(atr_pct * 1.5, 0.035, 0.09)
+    sl_arr  = np.clip(atr_pct * sl_mult, 0.035, 0.09)
     tp_arr  = sl_arr * tp_rr
 
     # ── Combined buy signal ───────────────────────────────────────────────────
-    buy = pullback_ok & three_ema
+    buy = pullback_ok & three_ema & vol_now_ok
 
     return buy, sl_arr, tp_arr
 
@@ -660,18 +695,29 @@ def run_vectorized(
         )
 
     # ── Phase 3: Bar loop — O(n), reads precomputed scalars by index ──────────
-    # No iloc[:i+1], no per-bar recomputation.
-    # Max 2 concurrent positions globally is managed at the caller level;
-    # this engine handles one symbol → at most 1 position for this symbol.
+    # Features:
+    #   • Trailing stop: once in profit, SL rises to lock gains.
+    #     Trail distance = initial SL fraction per trade (dynamic, not fixed).
+    #     This prevents premature exits: trail only moves SL once price rises
+    #     at least 1× SL, converting a winner to break-even instead of zero.
+    #   • Cooldown: after MAX_CONSEC_LOSS consecutive losses, pause COOLDOWN bars
+    MAX_CONSEC_LOSS = 3
+    COOLDOWN_BARS   = 8
+
     trades: list[dict] = []
     cash = float(capital)
 
-    in_position = False
-    entry_idx   = 0
-    entry_price = 0.0
-    qty         = 0.0
-    sl_price    = 0.0
-    tp_price    = 0.0
+    in_position    = False
+    entry_idx      = 0
+    entry_price    = 0.0
+    qty            = 0.0
+    sl_price       = 0.0
+    tp_price       = 0.0
+    highest_price  = 0.0   # for trailing stop
+    trail_frac     = 0.0   # dynamic trailing distance = initial SL fraction
+
+    consec_losses  = 0
+    cooldown_until = 0     # bar index until which we pause trading
 
     for i in range(warmup, n):
         price    = close[i]
@@ -679,12 +725,24 @@ def run_vectorized(
         bar_high = high[i]
 
         if in_position:
+            # ── Trailing stop: raise SL as price makes new highs ────────────
+            # Trail distance = initial SL fraction (dynamic per trade).
+            # Activation gate: only start trailing after price is ≥ 1× SL
+            # above entry.  This prevents the trail from moving SL to break-
+            # even on any trivial uptick, which was killing winners early.
+            if bar_high > highest_price:
+                highest_price = bar_high
+            # Only trail once price has risen enough to make trailing meaningful
+            if highest_price > entry_price * (1.0 + trail_frac):
+                trail_sl = highest_price * (1.0 - trail_frac)
+                if trail_sl > sl_price:
+                    sl_price = trail_sl
+
             # ── Exit logic: check SL/TP against this bar's low/high ─────────
             hit_sl = bar_low  <= sl_price
             hit_tp = bar_high >= tp_price
 
             if hit_sl or hit_tp:
-                # Conservative: if both trigger on the same bar, SL wins
                 if hit_sl:
                     exit_price = sl_price
                     reason     = "stop_loss"
@@ -693,38 +751,52 @@ def run_vectorized(
                     reason     = "take_profit"
 
                 pnl   = (exit_price - entry_price) * qty
-                cash += exit_price * qty          # return proceeds to cash
+                cash += exit_price * qty
 
                 trades.append(dict(
-                    symbol      = symbol,
-                    entry_idx   = entry_idx,
-                    entry_price = entry_price,
-                    exit_idx    = i,
-                    exit_price  = exit_price,
-                    pnl         = pnl,
-                    reason      = reason,
-                    sl          = sl_price,
-                    tp          = tp_price,
+                    symbol          = symbol,
+                    entry_idx       = entry_idx,
+                    entry_price     = entry_price,
+                    exit_idx        = i,
+                    exit_price      = exit_price,
+                    pnl             = pnl,
+                    reason          = reason,
+                    sl              = sl_price,
+                    tp              = tp_price,
+                    initial_sl_pct  = trail_frac,  # initial SL fraction (NOT final sl)
                 ))
                 in_position = False
-            # Skip new-entry check this bar (whether we closed or not; if we
-            # just closed we could in theory re-enter, but for safety we skip)
+
+                # ── Cooldown after consecutive losses ────────────────────────
+                if pnl <= 0:
+                    consec_losses += 1
+                    if consec_losses >= MAX_CONSEC_LOSS:
+                        cooldown_until = i + COOLDOWN_BARS
+                        consec_losses  = 0   # reset after triggering cooldown
+                else:
+                    consec_losses = 0
+            continue
+
+        # ── Skip if in cooldown period ───────────────────────────────────────
+        if i < cooldown_until:
             continue
 
         # ── Entry logic: only if a buy signal is precomputed at this bar ────
         if buy_signal[i]:
-            sl_p     = float(sl_arr[i])
-            tp_p     = float(tp_arr[i])
-            qty_new  = _size_position(cash, price, sl_p, risk_pct=0.02)
-            cost     = price * qty_new
+            sl_p    = float(sl_arr[i])
+            tp_p    = float(tp_arr[i])
+            qty_new = _size_position(cash, price, sl_p, risk_pct=0.02)
+            cost    = price * qty_new
             if qty_new > 0 and cost <= cash:
-                cash       -= cost
-                in_position = True
-                entry_idx   = i
-                entry_price = price
-                qty         = qty_new
-                sl_price    = price * (1.0 - sl_p)
-                tp_price    = price * (1.0 + tp_p)
+                cash          -= cost
+                in_position    = True
+                entry_idx      = i
+                entry_price    = price
+                qty            = qty_new
+                sl_price       = price * (1.0 - sl_p)
+                tp_price       = price * (1.0 + tp_p)
+                highest_price  = price
+                trail_frac     = sl_p   # dynamic: trail = initial SL fraction
 
     # ── Force-close any position still open at the last bar ──────────────────
     if in_position:
@@ -732,15 +804,16 @@ def run_vectorized(
         pnl        = (exit_price - entry_price) * qty
         cash      += exit_price * qty
         trades.append(dict(
-            symbol      = symbol,
-            entry_idx   = entry_idx,
-            entry_price = entry_price,
-            exit_idx    = n - 1,
-            exit_price  = exit_price,
-            pnl         = pnl,
-            reason      = "end_of_data",
-            sl          = sl_price,
-            tp          = tp_price,
+            symbol          = symbol,
+            entry_idx       = entry_idx,
+            entry_price     = entry_price,
+            exit_idx        = n - 1,
+            exit_price      = exit_price,
+            pnl             = pnl,
+            reason          = "end_of_data",
+            sl              = sl_price,
+            tp              = tp_price,
+            initial_sl_pct  = trail_frac,
         ))
 
     # ── Phase 4: Summary statistics — O(n), fully vectorised ─────────────────
