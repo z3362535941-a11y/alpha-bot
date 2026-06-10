@@ -12,7 +12,7 @@ from strategies import trend_following
 
 class MainstreamBot(BaseBot):
     max_positions: int = 2       # max 2 mainstream positions at once
-    trailing_stop_pct: float = 0.035  # 3.5% trailing stop
+    trailing_stop_pct: float = 0.030  # 3.0% trailing stop (tighter for mainstream)
 
     def __init__(self, capital: float, risk_manager: RiskManager, portfolio: Portfolio):
         super().__init__("MainBot", capital, risk_manager, portfolio)

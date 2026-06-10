@@ -11,7 +11,7 @@ from strategies import alpha_hunter
 
 
 class AlphaBot(BaseBot):
-    trailing_stop_pct: float = 0.04  # 4% trailing stop to lock in profits
+    trailing_stop_pct: float = 0.05  # 5% trailing stop (let breakouts run)
 
     def __init__(self, capital: float, risk_manager: RiskManager, portfolio: Portfolio):
         super().__init__("AlphaBot", capital, risk_manager, portfolio)

@@ -5,11 +5,11 @@ from typing import Dict
 
 @dataclass
 class RiskConfig:
-    max_risk_per_trade: float = 0.02
-    max_portfolio_drawdown: float = 0.10
-    max_position_size: float = 0.20
+    max_risk_per_trade: float = 0.015   # 1.5% per trade (was 2%)
+    max_portfolio_drawdown: float = 0.12 # 12% max drawdown gate
+    max_position_size: float = 0.15     # 15% max per position (was 20%)
     stop_loss_pct: float = 0.05
-    take_profit_pct: float = 0.15
+    take_profit_pct: float = 0.125
 
 
 @dataclass
@@ -33,9 +33,9 @@ class Settings:
     @classmethod
     def from_env(cls) -> "Settings":
         risk = RiskConfig(
-            max_risk_per_trade=float(os.getenv("MAX_RISK_PER_TRADE", 0.02)),
-            max_portfolio_drawdown=float(os.getenv("MAX_PORTFOLIO_RISK", 0.10)),
-            max_position_size=float(os.getenv("MAX_POSITION_SIZE", 0.20)),
+            max_risk_per_trade=float(os.getenv("MAX_RISK_PER_TRADE", 0.015)),
+            max_portfolio_drawdown=float(os.getenv("MAX_PORTFOLIO_RISK", 0.12)),
+            max_position_size=float(os.getenv("MAX_POSITION_SIZE", 0.15)),
         )
         allocation = BotAllocation(
             memecoin=float(os.getenv("MEMECOIN_ALLOCATION", 0.20)),

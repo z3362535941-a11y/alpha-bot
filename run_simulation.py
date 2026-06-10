@@ -117,7 +117,7 @@ def run_one_scenario(seed: int, settings: Settings, n_bars: int, verbose: bool =
 def main():
     banner()
     settings = Settings()
-    N_BARS = 720   # 720 小时 K 线 = 30天
+    N_BARS = 2160  # 2160 小时 K 线 = 90天 (更真实的统计样本)
     SEEDS = [42, 137, 256, 512, 999]
 
     print(f"  资金分配: MemeBot=${settings.starting_capital * settings.allocation.memecoin:,.0f}"

@@ -142,5 +142,5 @@ def generate_multi_asset(
         p.base_price = np.random.uniform(*base_price_range)
         p.drift += np.random.normal(0, 0.1)
         p.annual_vol *= np.random.uniform(0.7, 1.4)
-        result[sym] = generate_ohlcv(p, n_bars=n_bars, seed=42 + i)
+        result[sym] = generate_ohlcv(p, n_bars=n_bars)  # inherits np.random state set by caller
     return result

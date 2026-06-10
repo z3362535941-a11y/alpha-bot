@@ -12,8 +12,11 @@ class Position:
     take_profit: float
     bot_name: str
     cost: float = 0.0
-    highest_price: float = 0.0  # for trailing stop
-    trailing_pct: float = 0.0   # trailing stop distance
+    highest_price: float = 0.0
+    trailing_pct: float = 0.0
+    # partial TP: first target at 1.5x SL to bank profits early
+    partial_tp: float = 0.0
+    partial_done: bool = False
 
     def __post_init__(self):
         self.cost = self.entry_price * self.qty
@@ -39,6 +42,9 @@ class Position:
     def should_take_profit(self, price: float) -> bool:
         return price >= self.take_profit
 
+    def should_partial_tp(self, price: float) -> bool:
+        return not self.partial_done and self.partial_tp > 0 and price >= self.partial_tp
+
 
 class RiskManager:
     def __init__(self, config: RiskConfig, starting_capital: float):
@@ -56,13 +62,14 @@ class RiskManager:
 
     def position_size(self, capital: float, price: float,
                       volatility_factor: float = 1.0) -> float:
-        """Kelly-inspired position sizing with volatility adjustment."""
+        """Risk-based position sizing: risk exactly max_risk_per_trade of capital per trade."""
         risk_amount = capital * self.config.max_risk_per_trade
-        sl_distance = self.config.stop_loss_pct * volatility_factor
+        sl_distance = self.config.stop_loss_pct * max(0.5, volatility_factor)
         max_loss_per_unit = price * sl_distance
         if max_loss_per_unit <= 0:
             return 0.0
         qty = risk_amount / max_loss_per_unit
+        # Cap by max position size
         max_cost = capital * self.config.max_position_size
         max_qty_by_size = max_cost / price
         return min(qty, max_qty_by_size)
@@ -72,6 +79,8 @@ class RiskManager:
                       trailing_pct: float = 0.0) -> Optional[Position]:
         if symbol in self.positions:
             return None
+        # Partial TP at 1.5× SL distance (locks in half profit early)
+        partial_tp = price * (1 + sl_pct * 1.5)
         pos = Position(
             symbol=symbol,
             entry_price=price,
@@ -80,6 +89,7 @@ class RiskManager:
             take_profit=price * (1 + tp_pct),
             bot_name=bot_name,
             trailing_pct=trailing_pct,
+            partial_tp=partial_tp,
         )
         self.positions[symbol] = pos
         return pos
@@ -96,4 +106,9 @@ class RiskManager:
             return "STOP_LOSS"
         if pos.should_take_profit(current_price):
             return "TAKE_PROFIT"
+        if pos.should_partial_tp(current_price):
+            # Mark partial done and move SL to breakeven
+            pos.partial_done = True
+            pos.stop_loss = max(pos.stop_loss, pos.entry_price * 1.001)
+            return None  # don't fully exit, just tighten SL
         return None

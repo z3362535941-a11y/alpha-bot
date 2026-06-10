@@ -43,9 +43,17 @@ class Portfolio:
     def total_return_pct(self) -> float:
         return (self.cash - self.starting_capital) / self.starting_capital * 100
 
+    def update_equity(self, equity: float):
+        """Call mid-bar to track drawdown even with open positions."""
+        if equity > self.peak_value:
+            self.peak_value = equity
+        drawdown = (self.peak_value - equity) / self.peak_value * 100
+        if drawdown > self.max_drawdown:
+            self.max_drawdown = drawdown
+
     def record_trade(self, bot: str, symbol: str, action: str,
                      price: float, qty: float, pnl: float, reason: str):
-        self.cash += pnl
+        # Cash is already managed by _open/_close in BaseBot — do NOT touch cash here.
         self.total_pnl += pnl
         self.total_trades += 1
 

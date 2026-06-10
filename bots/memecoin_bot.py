@@ -12,7 +12,7 @@ from strategies import momentum
 
 class MemeBot(BaseBot):
     max_positions: int = 2       # max 2 meme positions at once
-    trailing_stop_pct: float = 0.05  # 5% trailing stop for memecoins
+    trailing_stop_pct: float = 0.045  # 4.5% trailing stop for memecoins
 
     def __init__(self, capital: float, risk_manager: RiskManager, portfolio: Portfolio):
         super().__init__("MemeBot", capital, risk_manager, portfolio)
