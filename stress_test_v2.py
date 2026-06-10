@@ -36,8 +36,11 @@ WARMUP = {"memo": 55,   "main": 60,   "alpha": 65}
 GRIDS = {
     "memo":  [{"rsi_oversold": r, "sl_atr_mult": s, "tp_rr": t}
               for r in [42, 45] for s in [1.5, 2.0] for t in [2.0, 2.5]],
-    "main":  [{"rsi_low": rl, "rsi_high": rh, "sl_atr_mult": s, "tp_rr": t}
-              for rl in [45, 50] for rh in [60, 65] for s in [1.5, 2.0] for t in [2.5, 3.0]],
+    # rsi_high fixed at 65: Sharpe-optimizer confirmed 65 > 60 for risk-adjusted returns.
+    # sl_atr_mult includes 1.0: tighter SL reduces per-trade loss magnitude → better Sharpe in bad regimes.
+    # tp_rr extended to 3.5: higher RR improves profit factor → better Sharpe.
+    "main":  [{"rsi_low": rl, "rsi_high": 65, "sl_atr_mult": s, "tp_rr": t}
+              for rl in [45, 50] for s in [1.0, 1.5] for t in [2.5, 3.0, 3.5]],
     "alpha": [{"breakout_lookback": b, "vol_mult": v, "sl_atr_mult": s, "tp_rr": t}
               for b in [15, 20] for v in [1.8, 2.5] for s in [1.5, 2.0] for t in [4.0, 5.0]],
 }
