@@ -79,23 +79,33 @@ def cr(v: float, suffix: str = "%") -> str:
 
 # ── 数据获取 ──────────────────────────────────────────────────────────────────
 
+_KLINE_URLS = [
+    "https://api.binance.com/api/v3/klines?symbol={sym}&interval={iv}&limit={n}",
+    "https://api1.binance.com/api/v3/klines?symbol={sym}&interval={iv}&limit={n}",
+    "https://api2.binance.com/api/v3/klines?symbol={sym}&interval={iv}&limit={n}",
+]
+
 def fetch_ohlcv(symbol: str = SYMBOL, n: int = N_BARS) -> pd.DataFrame | None:
-    url = (f"https://api.binance.com/api/v3/klines"
-           f"?symbol={symbol}&interval={INTERVAL}&limit={n}")
-    try:
-        req = urllib.request.Request(url, headers=_HEADERS)
-        with urllib.request.urlopen(req, timeout=12) as r:
-            raw = json.loads(r.read().decode())
-        df = pd.DataFrame(raw, columns=[
-            "ts","open","high","low","close","volume",
-            "close_ts","qvol","trades","tbvol","tqvol","_"
-        ])
-        df = df[["ts","open","high","low","close","volume"]].astype(float)
-        df.index = pd.to_datetime(df["ts"], unit="ms", utc=True)
-        return df.drop(columns=["ts"])
-    except Exception as e:
-        log(f"⚠ 数据获取失败: {e}")
-        return None
+    for attempt, url_tpl in enumerate(_KLINE_URLS):
+        url = url_tpl.format(sym=symbol, iv=INTERVAL, n=n)
+        for retry in range(3):
+            try:
+                req = urllib.request.Request(url, headers=_HEADERS)
+                with urllib.request.urlopen(req, timeout=15) as r:
+                    raw = json.loads(r.read().decode())
+                df = pd.DataFrame(raw, columns=[
+                    "ts","open","high","low","close","volume",
+                    "close_ts","qvol","trades","tbvol","tqvol","_"
+                ])
+                df = df[["ts","open","high","low","close","volume"]].astype(float)
+                df.index = pd.to_datetime(df["ts"], unit="ms", utc=True)
+                return df.drop(columns=["ts"])
+            except Exception as e:
+                wait = 2 ** retry
+                log(f"⚠ 数据获取失败(节点{attempt+1} 第{retry+1}次): {e}  {wait}s后重试")
+                time.sleep(wait)
+    log("❌ 所有节点均失败，跳过本次检查")
+    return None
 
 
 # ── 指标计算 ──────────────────────────────────────────────────────────────────
@@ -444,28 +454,33 @@ def main():
 
     # ── 持续运行模式 ──────────────────────────────────────────────────────────
     log("进入持续运行模式（Ctrl+C 退出）")
+    consecutive_errors = 0
     while True:
         try:
             result = run_check(state, status_only=False)
             state, sig = result
+            consecutive_errors = 0   # 成功后重置错误计数
 
             next_mins = minutes_to_next_candle()
             show_dashboard(state, sig, next_mins)
 
-            if next_mins > 0:
-                log(f"💤 休眠 {next_mins} 分钟，等待下根4H K线收盘...")
-                # 每10分钟检查一次是否需要中断
-                for _ in range(next_mins // 10 + 1):
-                    time.sleep(min(600, next_mins * 60))
-            else:
-                time.sleep(60)
+            wait_secs = max(next_mins * 60, 60)
+            log(f"💤 休眠 {next_mins} 分钟，等待下根4H K线收盘...")
+            time.sleep(wait_secs)
 
         except KeyboardInterrupt:
             log("用户中断，保存状态退出。")
+            save_state(state)
             break
         except Exception as e:
-            log(f"⚠ 运行错误: {e}  将在5分钟后重试...")
-            time.sleep(300)
+            consecutive_errors += 1
+            wait = min(300 * consecutive_errors, 1800)  # 最长等30分钟
+            log(f"⚠ 运行错误({consecutive_errors}次): {e}  {wait//60}分钟后重试...")
+            try:
+                save_state(state)
+            except Exception:
+                pass
+            time.sleep(wait)
 
 
 if __name__ == "__main__":

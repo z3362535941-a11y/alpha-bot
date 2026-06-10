@@ -46,7 +46,9 @@ MAX_POSITION_PCT   = 0.05      # 每笔最多5%（高风险小仓位）
 TAKE_PROFIT_X      = [2.0, 5.0, 10.0]  # 分批止盈：2倍、5倍、10倍
 STOP_LOSS_PCT      = -0.40     # 止损 -40%（Memecoin高波动）
 
-STATE_FILE = os.path.join(os.path.dirname(__file__), "logs", "whale_bot_state.json")
+STATE_FILE  = os.path.join(os.path.dirname(__file__), "logs", "whale_bot_state.json")
+LOG_FILE    = os.path.join(os.path.dirname(__file__), "logs", "whale_bot.log")
+OPPS_FILE   = os.path.join(os.path.dirname(__file__), "logs", "whale_opportunities.csv")
 
 _HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
@@ -59,15 +61,32 @@ CHAIN_ICON = {
 }
 
 
+# ── 日志 ──────────────────────────────────────────────────────────────────────
+
+def wlog(msg: str):
+    ts   = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{ts}] {msg}"
+    print(line)
+    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+    try:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception:
+        pass
+
+
 # ── HTTP ──────────────────────────────────────────────────────────────────────
 
-def _get(url: str, timeout: int = 12) -> dict | list | None:
-    try:
-        req = urllib.request.Request(url, headers=_HEADERS)
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return json.loads(r.read().decode())
-    except Exception:
-        return None
+def _get(url: str, timeout: int = 12, retries: int = 3) -> dict | list | None:
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers=_HEADERS)
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read().decode())
+        except Exception as e:
+            if attempt < retries - 1:
+                time.sleep(1.5 ** attempt)
+    return None
 
 
 # ── DexScreener 数据抓取 ──────────────────────────────────────────────────────
@@ -562,20 +581,23 @@ def main():
 """)
 
     state = load_state()
-    interval_mins = 15
+    interval_mins  = 15
+    consec_errors  = 0
 
     while True:
         try:
             now = datetime.now().strftime("%H:%M:%S")
-            section(f"🔍  开始扫描  [{now}]  (第{state['scans']+1}次)")
+            section(f"开始扫描  [{now}]  (第{state['scans']+1}次)")
 
             opportunities = scan_all()
             state["scans"] += 1
+            consec_errors = 0
 
             if not opportunities:
-                print(f"  {Fore.YELLOW}本次未找到符合条件的代币{Style.RESET_ALL}")
+                wlog("本次未找到符合条件的代币")
             else:
                 show_opportunities(opportunities, args.top)
+                _log_opportunities(opportunities)   # 保存到CSV
 
                 # 纸面交易
                 state = update_positions(state, opportunities)
@@ -588,17 +610,44 @@ def main():
             if args.once:
                 break
 
-            print(f"\n  {Fore.CYAN}⏰  {interval_mins}分钟后刷新扫描..."
+            print(f"\n  {Fore.CYAN}{interval_mins}分钟后刷新扫描..."
                   f"  (Ctrl+C 退出){Style.RESET_ALL}\n")
             time.sleep(interval_mins * 60)
 
         except KeyboardInterrupt:
-            print(f"\n{Fore.YELLOW}用户退出，状态已保存。{Style.RESET_ALL}")
+            wlog("用户退出，状态已保存。")
             save_state(state)
             break
         except Exception as e:
-            print(f"  {Fore.RED}⚠ 错误: {e}  5分钟后重试...{Style.RESET_ALL}")
-            time.sleep(300)
+            consec_errors += 1
+            wait = min(60 * consec_errors, 600)
+            wlog(f"ERROR({consec_errors}): {e}  {wait}s后重试")
+            try:
+                save_state(state)
+            except Exception:
+                pass
+            time.sleep(wait)
+
+
+def _log_opportunities(tokens: list[dict]):
+    """将每次发现的机会追加写入CSV，用于后续分析经验"""
+    os.makedirs(os.path.dirname(OPPS_FILE), exist_ok=True)
+    write_header = not os.path.exists(OPPS_FILE)
+    try:
+        with open(OPPS_FILE, "a", encoding="utf-8", newline="") as f:
+            if write_header:
+                f.write("time,chain,symbol,score,price_usd,market_cap,liquidity,"
+                        "vol_1h,price_change_1h,avg_tx_usd,age_days\n")
+            now = datetime.now().strftime("%Y-%m-%d %H:%M")
+            for t in tokens[:20]:
+                d = t.get("_detail", {})
+                f.write(f"{now},{t.get('_chain','')},{t.get('symbol') or t.get('name','?')},"
+                        f"{t['_score']},{t.get('price_usd',0):.8f},"
+                        f"{t.get('market_cap',0):.0f},{t.get('liquidity_usd',0):.0f},"
+                        f"{t.get('volume_1h',0):.0f},{t.get('price_change_1h',0):.1f},"
+                        f"{d.get('avg_tx_usd',0):.0f},{t.get('age_days',0):.1f}\n")
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":
