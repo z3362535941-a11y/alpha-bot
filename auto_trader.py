@@ -170,9 +170,12 @@ def check_signal(df: pd.DataFrame) -> dict:
     sl_price = round(entry * (1 - sl_pct), 2)
     tp_price = round(entry * (1 + tp_pct), 2)
 
+    live_price = round(float(d.iloc[-1]["close"]), 2)   # 最新未收盘K线的最新价
+
     return {
         "signal":     signal,
-        "entry":      round(entry, 2),
+        "entry":      round(entry, 2),        # 信号入场价（上根完整K线收盘）
+        "live_price": live_price,             # 实时市场价（最新K线当前价）
         "sl_price":   sl_price,
         "tp_price":   tp_price,
         "sl_pct":     round(sl_pct * 100, 2),
@@ -302,8 +305,9 @@ def show_dashboard(state: dict, sig: dict, next_check_mins: int):
     section("📊  当前市场 (最新4H收盘)")
     rsi_c = Fore.GREEN if sig["rsi"] > 55 else Fore.RED if sig["rsi"] < 40 else Fore.YELLOW
     trend_icon = "✅ 上升" if sig["ema_fast"] > sig["ema_slow"] else "❌ 下行"
+    live = sig.get("live_price", sig["entry"])
     print(f"  币种:    {SYMBOL}  |  周期: {INTERVAL.upper()}")
-    print(f"  价格:    ${sig['entry']:,.2f}")
+    print(f"  实时价格: ${live:,.2f}  (信号参考: ${sig['entry']:,.2f})")
     print(f"  RSI:     {rsi_c}{sig['rsi']}{Style.RESET_ALL}")
     print(f"  EMA20:   ${sig['ema_fast']:,.2f}  |  EMA50: ${sig['ema_slow']:,.2f}  |  趋势: {trend_icon}")
     print(f"  ATR:     ${sig['atr']:,.2f}")
@@ -331,7 +335,7 @@ def show_dashboard(state: dict, sig: dict, next_check_mins: int):
 
     section("📌  当前持仓")
     if pos:
-        current_price = sig["entry"]
+        current_price = sig.get("live_price", sig["entry"])
         float_pnl = (current_price - pos["entry"]) * pos["qty"]
         float_pct  = (current_price - pos["entry"]) / pos["entry"] * 100
         print(f"  方向:  多单 (Long)")
