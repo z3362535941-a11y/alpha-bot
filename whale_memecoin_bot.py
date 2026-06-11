@@ -96,7 +96,7 @@ def fetch_dexscreener_trending() -> list[dict]:
     """抓取 DexScreener 上热门代币（所有链）"""
     tokens = []
 
-    # 1. 获取置顶推广代币（通常是有热度的）
+    # 1. 置顶推广代币
     boosts = _get("https://api.dexscreener.com/token-boosts/top/v1")
     if boosts:
         addresses = [b.get("tokenAddress","") for b in (boosts if isinstance(boosts, list) else []) if b.get("tokenAddress")]
@@ -106,14 +106,19 @@ def fetch_dexscreener_trending() -> list[dict]:
             if data and "pairs" in data:
                 tokens.extend(data["pairs"] or [])
 
-    # 2. 逐链搜索 meme 相关词
-    keywords = ["meme", "pepe", "doge", "cat", "inu", "moon", "elon", "baby", "bonk"]
-    for chain in CHAINS[:3]:   # 主要扫 SOL / BSC / BASE
+    # 2. 各链专属关键词搜索（均衡覆盖）
+    chain_keywords = {
+        "solana": ["meme", "pepe", "bonk", "wif", "cat"],
+        "bsc":    ["meme", "pepe", "doge", "inu", "baby"],
+        "base":   ["meme", "pepe", "brett", "toshi", "based"],
+        "ethereum": ["meme", "pepe", "shib", "floki"],
+    }
+    for chain, keywords in chain_keywords.items():
         for kw in keywords[:3]:
             result = _get(f"https://api.dexscreener.com/latest/dex/search?q={kw}+{chain}")
             if result and "pairs" in result:
                 tokens.extend(result["pairs"] or [])
-            time.sleep(0.15)
+            time.sleep(0.12)
 
     return tokens
 
@@ -329,7 +334,7 @@ def scan_all() -> list[dict]:
             raw_tokens.append(t)
     print(f" {len(raw_tokens)} 个原始代币")
 
-    for chain in ["solana", "bsc"]:
+    for chain in ["solana", "bsc", "base", "eth"]:
         print(f"  {Fore.YELLOW}▶ GeckoTerminal {chain}...{Style.RESET_ALL}",
               end="", flush=True)
         gt = fetch_geckoterminal_new(chain)
