@@ -32,19 +32,20 @@ init(autoreset=True)
 # ── 配置 ──────────────────────────────────────────────────────────────────────
 CHAINS = ["solana", "bsc", "base", "ethereum"]
 
-# 筛选条件（可调整）
-MIN_LIQUIDITY_USD  = 30_000    # 最低流动性（防止假代币）
-MAX_MARKET_CAP     = 10_000_000  # 最高市值 $10M（超过则潜力有限）
-MIN_MARKET_CAP     = 50_000    # 最低市值 $50K（太小容易跑路）
-MIN_VOL_1H_USD     = 50_000    # 1小时最低成交量
-MIN_PRICE_CHANGE_1H = 10.0     # 1小时涨幅 > 10%
-MAX_TOKEN_AGE_DAYS  = 30       # 上线不超过30天
+# 筛选条件 — 根据实盘数据优化（均笔额$90属于散户，提高门槛）
+MIN_LIQUIDITY_USD   = 40_000    # 提高：更好的流动性 = 更安全退出
+MAX_MARKET_CAP      = 5_000_000 # 降低：专注更小市值 = 更大涨幅空间
+MIN_MARKET_CAP      = 80_000    # 提高：过滤极小盘跑路风险
+MIN_VOL_1H_USD      = 80_000    # 提高：确保足够交易量
+MIN_PRICE_CHANGE_1H = 15.0      # 提高：动量更强的信号
+MAX_TOKEN_AGE_DAYS  = 14        # 缩短：越新的币爆发概率越高
+MIN_AVG_TX_USD      = 500       # 新增：均笔额>$500才算有效资金入场
 
 # 纸面交易配置
 CAPITAL            = 10_000.0  # 总资金
-MAX_POSITION_PCT   = 0.05      # 每笔最多5%（高风险小仓位）
+MAX_POSITION_PCT   = 0.04      # 降低到4%：分散风险
 TAKE_PROFIT_X      = [2.0, 5.0, 10.0]  # 分批止盈：2倍、5倍、10倍
-STOP_LOSS_PCT      = -0.40     # 止损 -40%（Memecoin高波动）
+STOP_LOSS_PCT      = -0.35     # 收紧止损到-35%：减少单笔损失
 
 STATE_FILE  = os.path.join(os.path.dirname(__file__), "logs", "whale_bot_state.json")
 LOG_FILE    = os.path.join(os.path.dirname(__file__), "logs", "whale_bot.log")
@@ -342,12 +343,18 @@ def scan_all() -> list[dict]:
     # 过滤
     filtered = []
     for t in raw_tokens:
-        if (t.get("liquidity_usd", 0) < MIN_LIQUIDITY_USD): continue
-        if (t.get("market_cap", 0) > MAX_MARKET_CAP): continue
-        if (t.get("market_cap", 0) > 0 and t.get("market_cap", 0) < MIN_MARKET_CAP): continue
-        if (t.get("volume_1h", 0) < MIN_VOL_1H_USD): continue
-        if (t.get("price_change_1h", 0) < MIN_PRICE_CHANGE_1H): continue
-        if (t.get("age_days", 9999) > MAX_TOKEN_AGE_DAYS): continue
+        if t.get("liquidity_usd", 0) < MIN_LIQUIDITY_USD: continue
+        if t.get("market_cap", 0) > MAX_MARKET_CAP: continue
+        if 0 < t.get("market_cap", 0) < MIN_MARKET_CAP: continue
+        if t.get("volume_1h", 0) < MIN_VOL_1H_USD: continue
+        if t.get("price_change_1h", 0) < MIN_PRICE_CHANGE_1H: continue
+        if t.get("age_days", 9999) > MAX_TOKEN_AGE_DAYS: continue
+        # 均笔额过滤：散户扎堆的小额交易不是鲸鱼信号
+        buys  = t.get("txns_1h_buys", 0) or 0
+        sells = t.get("txns_1h_sells", 0) or 0
+        total_txns = buys + sells
+        avg_tx = t.get("volume_1h", 0) / total_txns if total_txns > 0 else 0
+        if avg_tx < MIN_AVG_TX_USD: continue
         filtered.append(t)
 
     # 评分
