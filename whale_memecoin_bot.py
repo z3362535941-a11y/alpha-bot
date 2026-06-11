@@ -39,7 +39,7 @@ MIN_MARKET_CAP      = 80_000    # 提高：过滤极小盘跑路风险
 MIN_VOL_1H_USD      = 80_000    # 提高：确保足够交易量
 MIN_PRICE_CHANGE_1H = 15.0      # 提高：动量更强的信号
 MAX_TOKEN_AGE_DAYS  = 14        # 缩短：越新的币爆发概率越高
-MIN_AVG_TX_USD      = 500       # 新增：均笔额>$500才算有效资金入场
+MIN_AVG_TX_USD      = 200       # 均笔额>$200过滤散户噪音（$500太严导致零信号）
 
 # 纸面交易配置
 CAPITAL            = 10_000.0  # 总资金
@@ -392,8 +392,29 @@ def update_positions(state: dict, opportunities: list[dict]) -> dict:
         pos["last_price"] = cur_price
         pnl_pct = (cur_price - pos["entry"]) / pos["entry"] * 100 if pos["entry"] > 0 else 0
 
-        # 止损检查
-        if pnl_pct <= STOP_LOSS_PCT * 100:
+        # 利润保护：涨超80%后把止损上移到+50%，锁住大部分利润
+        if pnl_pct >= 80 and not pos.get("profit_lock"):
+            pos["profit_lock"] = True
+            pos["dynamic_sl_pct"] = 50.0
+            wlog(f"锁利润: {pos['name']} 涨{pnl_pct:.0f}% → 止损上移至+50%")
+        elif pnl_pct >= 200 and pos.get("profit_lock"):
+            pos["dynamic_sl_pct"] = max(pos.get("dynamic_sl_pct", 50), 100.0)
+
+        # 动态止损检查（普通止损 or 上移后的利润保护止损）
+        sl_threshold = pos.get("dynamic_sl_pct")
+        if sl_threshold is not None:
+            if pnl_pct < sl_threshold:
+                profit = (cur_price - pos["entry"]) * pos["qty"]
+                state["equity"] += pos["entry"] * pos["qty"] + profit
+                state["trades"].append({
+                    "name": pos["name"], "entry": pos["entry"],
+                    "exit": round(cur_price, 8), "pnl_pct": round(pnl_pct, 1),
+                    "reason": f"锁利止损(>{sl_threshold:.0f}%)", "time": datetime.now().isoformat(),
+                })
+                closed.append(addr)
+                print(f"  {Fore.YELLOW}🔒 锁利止损: {pos['name']}  {pnl_pct:+.1f}%{Style.RESET_ALL}")
+                continue
+        elif pnl_pct <= STOP_LOSS_PCT * 100:
             profit = (cur_price - pos["entry"]) * pos["qty"]
             state["equity"] += pos["entry"] * pos["qty"] + profit
             state["trades"].append({
@@ -402,7 +423,7 @@ def update_positions(state: dict, opportunities: list[dict]) -> dict:
                 "reason": "止损", "time": datetime.now().isoformat(),
             })
             closed.append(addr)
-            print(f"  {Fore.RED}💀 止损出场: {pos['name']}  {pnl_pct:+.1f}%{Style.RESET_ALL}")
+            print(f"  {Fore.RED}止损出场: {pos['name']}  {pnl_pct:+.1f}%{Style.RESET_ALL}")
             continue
 
         # 分批止盈
